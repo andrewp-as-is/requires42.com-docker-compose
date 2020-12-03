@@ -1,0 +1,55 @@
+version: "3"
+
+services:
+  redis:
+    image: redis:latest
+    container_name: requires42.com-redis
+    networks:
+      - requires42.com
+    ports:
+      - 6379:6379
+    command: ["redis-server", "--appendonly", "yes"]
+
+  api.requires42.com-wsgi:
+    image: api.requires42.com-wsgi:latest
+    container_name: api.requires42.com-wsgi
+    networks:
+      - requires42.com
+    ports:
+      - 8071:8080
+    env_file:
+      - /usr/share/env/api.requires42.com-wsgi/.env
+
+  requires42.com-schedule-daemon:
+    image: requires42.com-schedule-daemon:latest
+    container_name: requires42.com-schedule-daemon
+    networks:
+      - requires42.com
+    depends_on:
+      - "redis"
+    env_file:
+      - /usr/share/env/requires42.com-schedule-daemon/.env
+
+  requires42.com-celery-worker-daemon:
+    image: requires42.com-celery-worker-daemon:latest
+    container_name: requires42.com-celery-worker-daemon
+    networks:
+      - requires42.com
+    depends_on:
+      - "redis"
+    env_file:
+      - /usr/share/env/requires42.com-celery-worker-daemon/.env
+
+  requires42.com-wsgi:
+    image: requires42.com-wsgi:latest
+    container_name: requires42.com-wsgi
+    networks:
+      - requires42.com
+    ports:
+      - 8070:8080
+    env_file:
+      - /usr/share/env/requires42.com-wsgi/.env
+
+networks:
+  requires42.com:
+    driver: bridge
